@@ -14,66 +14,90 @@ straight from Health Services.
 > Unofficial fan project, not affiliated with or endorsed by Valve. Half-Life,
 > the lambda logo and Combine imagery are trademarks of Valve Corporation.
 
-## Build
+## Install
 
-You need a JDK and the Android SDK. Installing
-[Android Studio](https://developer.android.com/studio) gets both and is the easy
-route — you never have to open it. If you would rather not, the
+Works on macOS, Linux and Windows. Windows users: run `build.bat` wherever these
+steps say `./build.sh`.
+
+**1. Install the build tools.** You need a JDK and the Android SDK.
+[Android Studio](https://developer.android.com/studio) gets you both — install it
+and you are done; you never have to open it. (Prefer not to? The
 [command-line tools](https://developer.android.com/studio#command-line-tools-only)
-plus any JDK 17+ work too; point `ANDROID_HOME` at the SDK.
+plus any JDK 17+ also work; set `ANDROID_HOME` to the SDK.) Make sure `adb` is on
+your `PATH` — it lives in the SDK's `platform-tools`.
 
-Works on macOS, Linux and Windows. `adb` must be on your `PATH` (it ships with
-the SDK, under `platform-tools`).
+**2. Turn on debugging on the watch.** `Settings` → `About watch` → `Software`,
+then tap `Software version` seven times. Go back to `Settings` →
+`Developer options` and enable **ADB debugging** and **Wireless debugging**.
+
+**3. Pair the watch.** Open `Wireless debugging` → `Pair new device`. It shows an
+IP with a *pairing* port and a six-digit code:
+
+```bash
+adb pair 192.168.1.80:37123     # then type the six-digit code
+adb connect 192.168.1.80:5555   # port from the main Wireless debugging screen
+```
+
+The connect port is a **different** number from the pairing port, and both change
+every time wireless debugging is toggled off and on.
+
+**4. Get the code.**
 
 ```bash
 git clone git@github.com:resonanse-cascade/hl-watchface.git
 cd hl-watchface
-
-python3 -m pip install --user pillow          # optional, for the artwork
-python3 setup_assets.py ~/Downloads/hud.png   # optional, see below
-
-./build.sh --install                          # Windows: build.bat --install
 ```
 
-The build script locates the JDK, writes `local.properties`, builds, and installs
-to a connected watch. Without `--install` it just builds to
+**5. Add the Half-Life artwork.** Optional — skip it and the face still works,
+just plainer. See [Artwork](#artwork) for where the files come from.
+
+```bash
+python3 -m pip install --user pillow
+python3 setup_assets.py ~/Downloads/hud.png
+```
+
+**6. Build and install.**
+
+```bash
+./build.sh --install
+```
+
+This finds the JDK, writes `local.properties`, builds, and pushes the APK to the
+watch. Without `--install` it only builds, to
 `app/build/outputs/apk/debug/app-debug.apk`.
+
+**7. Pick the face.** On the watch, long-press the current face, swipe to
+**Lambda HUD**, and tap it.
+
+**8. Set it up.** Long-press again → **Customize** to choose a theme and assign
+complications. Accept the permission prompt the first time you open a slot.
+
+### If something goes wrong
+
+- `adb connect` refused — pair again (step 3); the ports change.
+- "SDK location not found" — set `ANDROID_HOME`, or install Android Studio.
+- "No Java found" — same fix; the JDK ships inside Android Studio.
+- Face missing from the picker — `adb uninstall com.resonanse.hlwatchface`, then
+  build and install again.
 
 ## Artwork
 
+None of it is included here — it is Valve's. Two sources, both fetched by you:
+
 | What | Source |
 |---|---|
-| HL1 HUD sprites | [The Spriters Resource](https://www.spriters-resource.com/pc_computer/halflife/asset/149252/) — download "Miscellaneous - HUD", pass the file to the script |
-| HL2 Combine insignia | [Half-Life wiki](https://half-life.fandom.com/wiki/Combine_imagery) — fetched by the script |
+| HL1 HUD sprites | [The Spriters Resource](https://www.spriters-resource.com/pc_computer/halflife/asset/149252/) — download "Miscellaneous - HUD" and pass the file to the script |
+| HL2 Combine insignia | [Half-Life wiki](https://half-life.fandom.com/wiki/Combine_imagery) — fetched by the script automatically |
 
 `setup_assets.py` slices the sheet, rewrites each sprite so the renderer can tint
 it to either palette, and converts the Combine SVGs to vector drawables. Output
 lands in `app/src/main/res/drawable/` and is git-ignored.
 
-Without artwork the face still works: rows use each data source's own icon, the
+Without it the face still works: rows use each data source's own icon, the
 Combine emblem falls back to a drawn shape, and the watermark and damage strip
 are skipped.
 
-## Connecting the watch
-
-Wear OS installs over Wi-Fi, not USB. On the watch, tap `Settings` → `About
-watch` → `Software version` seven times, then enable **ADB debugging** and
-**Wireless debugging**. Open `Wireless debugging` → `Pair new device` for a
-pairing port and code.
-
-```bash
-adb pair WATCH_IP:PAIRING_PORT     # six-digit code from the watch
-adb connect WATCH_IP:ADB_PORT      # the port on the main screen — a different one
-```
-
-Both ports change whenever wireless debugging is toggled. `./install_watchface.sh
-WATCH_IP ADB_PORT` wraps connect-and-install.
-
 ## Using it
-
-Long-press the face → **Customize** to switch theme and assign complications.
-The first time you open a slot, accept the complication-data permission — the
-chooser cannot open without it.
 
 Each row shows the data source's icon, its value, and a segmented bar. **The bar
 only appears when the value has a range** (a `RANGED_VALUE`/`GOAL_PROGRESS`
