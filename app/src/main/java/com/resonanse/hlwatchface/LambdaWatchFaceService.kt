@@ -280,7 +280,14 @@ class LambdaWatchFaceService : WatchFaceService() {
             return paletteFor(opt?.id?.value?.let { String(it) })
         }
 
-        /** Repaints every brush. Cheap, and a no-op unless the theme actually changed. */
+        /**
+         * Repaints every brush. Cheap, and a no-op unless the theme actually changed.
+         *
+         * Two things are easy to miss when adding a theme: [tintedIcon] must tint from
+         * `palette.accent` rather than the ORANGE constant, or complication icons stay
+         * amber on a blue face; and the tinted-drawable cache has the old colour baked
+         * in, so it is cleared here.
+         */
         private fun applyPalette(pal: Palette) {
             if (pal == palette && paletteApplied) return
             palette = pal
