@@ -1,0 +1,20 @@
+# Build output
+build/
+app/build/
+.gradle/
+.kotlin/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Imported game artwork — Valve's, not ours to redistribute.
+# Run setup_assets.py to regenerate these locally.
+app/src/main/res/drawable/hl_*.png
+app/src/main/res/drawable/hl2_*.xml
+
+# Source sheets and captures that contain game artwork
+*HUD.png
+*.gif

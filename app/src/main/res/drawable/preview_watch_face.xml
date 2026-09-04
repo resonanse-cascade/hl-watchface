@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Watch face preview shown in the picker and companion listings.
+
+    Deliberately an abstract representation of the layout rather than a screenshot:
+    a real capture would contain game artwork, and this repo ships none. It suggests
+    the dial, the stacked left-hand rows and the split time, in the Lambda palette.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="400"
+    android:viewportHeight="400">
+
+    <!-- dial -->
+    <path
+        android:fillColor="#050505"
+        android:pathData="M200,8 A192,192 0 1,1 199,8 Z" />
+    <path
+        android:strokeColor="#1A1A1A"
+        android:strokeWidth="6"
+        android:pathData="M200,14 A186,186 0 1,1 199,14" />
+    <!-- seconds arc -->
+    <path
+        android:strokeColor="#FF9C2E"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M200,22 A178,178 0 0,1 355,290" />
+
+    <!-- left column: value rows with segmented bars -->
+    <path android:fillColor="#FF9C2E" android:pathData="M52,120h74v22h-74z" />
+    <path android:fillColor="#66FF9C2E" android:pathData="M140,120h48v22h-48z" />
+    <path android:fillColor="#FF9C2E" android:pathData="M52,152h108v10h-108z" />
+    <path android:fillColor="#40FF9C2E" android:pathData="M164,152h24v10h-24z" />
+
+    <path android:fillColor="#FF9C2E" android:pathData="M52,192h74v22h-74z" />
+    <path android:fillColor="#66FF9C2E" android:pathData="M140,192h48v22h-48z" />
+    <path android:fillColor="#FF9C2E" android:pathData="M52,224h60v10h-60z" />
+    <path android:fillColor="#40FF9C2E" android:pathData="M116,224h72v10h-72z" />
+
+    <path android:fillColor="#FF9C2E" android:pathData="M52,264h74v22h-74z" />
+    <path android:fillColor="#66FF9C2E" android:pathData="M140,264h48v22h-48z" />
+
+    <!-- right: split time with divider -->
+    <path android:fillColor="#FF9C2E" android:pathData="M244,110h108v70h-108z" />
+    <path android:fillColor="#BBFF9C2E" android:pathData="M232,192h132v3h-132z" />
+    <path android:fillColor="#BBFF9C2E" android:pathData="M244,208h108v70h-108z" />
+</vector>

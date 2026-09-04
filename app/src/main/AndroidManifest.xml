@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="android.hardware.type.watch" />
+
+    <!-- Required by ComplicationHelperActivity. Without it the runtime permission
+         request is auto-denied, so the data-source chooser closes immediately and
+         the editor's slot buttons appear to do nothing. -->
+    <uses-permission android:name="com.google.android.wearable.permission.RECEIVE_COMPLICATION_DATA" />
+
+    <!-- Used to read heart rate from Health Services. The Samsung Health heart rate
+         COMPLICATION will not give a real BPM to a side-loaded face, so the face
+         measures it itself. Granted from the Customize screen. -->
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <!-- Declares the app works without a phone-side counterpart. Companion apps
+             use this to decide whether a watch-installed face is listable on its own. -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+
+        <service
+            android:name=".LambdaWatchFaceService"
+            android:exported="true"
+            android:label="@string/watch_face_name"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview"
+                android:resource="@drawable/preview_watch_face" />
+            <meta-data
+                android:name="com.google.android.wearable.watchface.preview_circular"
+                android:resource="@drawable/preview_watch_face" />
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/watch_face" />
+            <!-- Declares the on-watch editor so the Customize button appears on long-press -->
+            <meta-data
+                android:name="com.google.android.wearable.watchface.wearableConfigurationAction"
+                android:value="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
+        </service>
+
+        <!-- Bound by Health Services to deliver passive heart rate updates. Exported
+             by necessity, so it is guarded with the Health Services binding permission
+             to keep anything else from binding it. -->
+        <service
+            android:name=".HeartRateListenerService"
+            android:exported="true"
+            android:permission="com.google.android.wearable.healthservices.permission.PASSIVE_DATA_BINDING" />
+
+        <activity
+            android:name=".WatchFaceConfigActivity"
+            android:exported="true"
+            android:label="@string/watch_face_name"
+            android:theme="@android:style/Theme.DeviceDefault">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="com.google.android.wearable.watchface.category.WEARABLE_CONFIGURATION" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
