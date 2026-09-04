@@ -8,6 +8,14 @@ CRT scanlines and aperture grille, a seconds arc, split time, four configurable
 complication slots, an animated background watermark, and a heart rate read
 straight from Health Services.
 
+| Lambda | Combine |
+|---|---|
+| ![Lambda theme](https://i.redd.it/2ugw1lxqednh1.gif) | ![Combine theme](https://i.redd.it/cp5yqkdrednh1.gif) |
+
+Both shown with the Half-Life artwork imported — see [Artwork](#artwork). The
+bottom strip cycles the HL1 damage indicators; the background watermark sweeps
+once a minute.
+
 > **No game artwork is included** — it is Valve's. The face builds and runs
 > without it; `setup_assets.py` imports it from sources you fetch yourself.
 >
