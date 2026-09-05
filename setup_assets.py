@@ -134,8 +134,13 @@ def svg_to_vector(svg, name):
         die(f"{name}: found no drawable shapes in the SVG")
 
     data = "".join(subpaths).replace("&", "&amp;").replace('"', "&quot;")
+    # even-odd rather than SVG's nonzero default: these marks carry their holes as
+    # separate subpaths, and the winding that makes them holes in the source does not
+    # survive the conversion reliably. Even-odd gives the intended cut-outs, and is
+    # equivalent for art whose subpaths do not overlap.
     body = f"""    <path
         android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
         android:pathData="{data}" />"""
     if tx or ty:
         body = f"""    <group
