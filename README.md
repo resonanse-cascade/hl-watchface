@@ -4,17 +4,18 @@ A Half-Life themed watch face, built and tested on a Galaxy Watch 5 (SM-R910).
 Two themes, switchable on the watch: **Lambda** (HL1 HEV amber) and **Combine**
 (HL2 neon blue).
 
-CRT scanlines and aperture grille, a seconds arc, split time, four configurable
-complication slots, an animated background watermark, and a heart rate read
-straight from Health Services.
+CRT scanlines and aperture grille, a sweeping seconds arc, split time, four
+configurable complication slots, an animated background watermark, and a heart
+rate read straight from Health Services.
 
 | Lambda | Combine |
 |---|---|
 | ![Lambda theme](https://i.redd.it/2ugw1lxqednh1.gif) | ![Combine theme](https://i.redd.it/cp5yqkdrednh1.gif) |
 
 Both shown with the Half-Life artwork imported — see [Artwork](#artwork). The
-bottom strip cycles the HL1 damage indicators; the background watermark sweeps
-once a minute.
+bottom strip cycles the HL1 damage indicators, and a bright band sweeps across
+the background watermark every few seconds. (The captures predate the Black Mesa
+emblem, which now replaces the lambda glyph on the Lambda theme.)
 
 > **No game artwork is included** — it is Valve's. The face builds and runs
 > without it; `setup_assets.py` imports it from sources you fetch yourself.
@@ -107,6 +108,17 @@ Combine emblem falls back to a drawn shape, the Lambda emblem falls back to a
 lambda glyph, and the watermark and damage strip are skipped.
 
 ## Using it
+
+Long-press the face → **Customize**. Alongside the four complication slots:
+
+- **[ THEME ]** — Lambda or Combine. Changes the palette, the centre emblem and
+  the background watermark.
+- **[ MOTION ]** — how often the face redraws, traded against battery:
+  *Smooth* (20 fps, gliding arc and sweep), *Balanced* (5 fps, the arc still
+  ticks visibly), or *Battery saver* (1 fps). 30 fps is deliberately not offered:
+  a frame costs ~33 ms on watch, so it would sit exactly at budget with the CPU
+  never idling while the screen is on.
+- **[ PULSE ]** — appears only while the heart rate sensor permission is missing.
 
 Each row shows the data source's icon, its value, and a segmented bar. **The bar
 only appears when the value has a range** (a `RANGED_VALUE`/`GOAL_PROGRESS`
