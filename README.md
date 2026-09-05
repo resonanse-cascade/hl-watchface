@@ -96,14 +96,15 @@ None of it is included here — it is Valve's. Two sources, both fetched by you:
 |---|---|
 | HL1 HUD sprites | [The Spriters Resource](https://www.spriters-resource.com/pc_computer/halflife/asset/149252/) — download "Miscellaneous - HUD" and pass the file to the script |
 | HL2 Combine insignia | [Half-Life wiki](https://half-life.fandom.com/wiki/Combine_imagery) — fetched by the script automatically |
+| Black Mesa logo | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Black_Mesa_logo.svg) — fetched by the script automatically. Public domain, though still a Valve trademark |
 
 `setup_assets.py` slices the sheet, rewrites each sprite so the renderer can tint
 it to either palette, and converts the Combine SVGs to vector drawables. Output
 lands in `app/src/main/res/drawable/` and is git-ignored.
 
 Without it the face still works: rows use each data source's own icon, the
-Combine emblem falls back to a drawn shape, and the watermark and damage strip
-are skipped.
+Combine emblem falls back to a drawn shape, the Lambda emblem falls back to a
+lambda glyph, and the watermark and damage strip are skipped.
 
 ## Using it
 

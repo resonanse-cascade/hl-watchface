@@ -13,9 +13,10 @@ HL1 HUD sprite sheet — download "Miscellaneous - HUD" from The Spriters Resour
 
     https://www.spriters-resource.com/pc_computer/halflife/asset/149252/
 
-Combine insignia (HL2) are fetched from the Half-Life wiki automatically:
+Vector marks are fetched automatically:
 
-    https://half-life.fandom.com/wiki/Combine_imagery
+    Combine insignia   https://half-life.fandom.com/wiki/Combine_imagery
+    Black Mesa logo    https://commons.wikimedia.org/wiki/File:Black_Mesa_logo.svg
 
 Everything lands in app/src/main/res/drawable/ and is git-ignored.
 """
@@ -29,7 +30,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_DIR = os.path.join(HERE, "app", "src", "main", "res", "drawable")
 
 SPRITERS_URL = "https://www.spriters-resource.com/pc_computer/halflife/asset/149252/"
-COMBINE_SVGS = {
+VECTOR_SVGS = {
+    # Black Mesa logo — public domain on Commons (Valve trademark), used as the
+    # Lambda theme's centre emblem.
+    "hl_blackmesa": (
+        "https://upload.wikimedia.org/wikipedia/commons/d/d6/Black_Mesa_logo.svg"
+    ),
     "hl2_combine": (
         "https://static.wikia.nocookie.net/half-life/images/1/1e/"
         "Combine_main_symbol.svg/revision/latest?cb=20100327182309&path-prefix=en"
@@ -107,6 +113,11 @@ def svg_to_vector(svg, name):
         die(f"{name}: no viewBox in the downloaded SVG")
     _, _, vw, vh = [float(v) for v in vb.group(1).split()]
 
+    tx = ty = 0.0
+    m = re.search(r'transform="translate\(([-\d.]+)[,\s]+([-\d.]+)\)"', svg)
+    if m:
+        tx, ty = float(m.group(1)), float(m.group(2))
+
     subpaths = []
     for d in re.findall(r'\sd="([^"]*)"', svg, re.S):
         subpaths.append(" ".join(d.split()))
@@ -123,16 +134,23 @@ def svg_to_vector(svg, name):
         die(f"{name}: found no drawable shapes in the SVG")
 
     data = "".join(subpaths).replace("&", "&amp;").replace('"', "&quot;")
+    body = f"""    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="{data}" />"""
+    if tx or ty:
+        body = f"""    <group
+        android:translateX="{tx}"
+        android:translateY="{ty}">
+    {body}
+    </group>"""
     xml = f"""<?xml version="1.0" encoding="utf-8"?>
-<!-- Imported by setup_assets.py from the Half-Life wiki. Not redistributed. -->
+<!-- Imported by setup_assets.py. Not redistributed; see the README. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="{vw}"
     android:viewportHeight="{vh}">
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="{data}" />
+{body}
 </vector>
 """
     with open(os.path.join(OUT_DIR, name + ".xml"), "w") as f:
@@ -140,15 +158,15 @@ def svg_to_vector(svg, name):
     print(f"  {name}.xml  ({len(subpaths)} subpaths)")
 
 
-def import_combine():
-    for name, url in COMBINE_SVGS.items():
+def import_vectors():
+    for name, url in VECTOR_SVGS.items():
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
             with urllib.request.urlopen(req, timeout=30) as r:
                 svg = r.read().decode("utf-8", "replace")
         except Exception as e:
             print(f"  ! could not fetch {name}: {e}")
-            print(f"    The Combine theme will fall back to a drawn shape.")
+            print("    That theme will fall back to a drawn shape.")
             continue
         svg_to_vector(svg, name)
 
@@ -160,8 +178,8 @@ def main():
         die("Give me the path to the HL1 HUD sheet.")
     print("Importing HL1 HUD sprites...")
     import_hl1(sys.argv[1])
-    print("Fetching Combine insignia...")
-    import_combine()
+    print("Fetching vector marks...")
+    import_vectors()
     print(f"\nDone. Artwork is in {os.path.relpath(OUT_DIR, HERE)} (git-ignored).")
     print("Now build:  ./build.sh")
 

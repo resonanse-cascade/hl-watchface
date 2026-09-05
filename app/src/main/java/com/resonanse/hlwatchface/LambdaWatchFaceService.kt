@@ -429,8 +429,17 @@ class LambdaWatchFaceService : WatchFaceService() {
 
             // 5 ── lambda badge, sitting in the corridor right of centre
             if (palette.emblem == Emblem.LAMBDA) {
-                pEmblem.textSize = R * 0.28f
-                canvas.drawText("λ", cx + R * 0.10f, cy + pEmblem.textSize * 0.38f, pEmblem)
+                // Black Mesa logo when it has been imported; the lambda glyph is the
+                // fallback, so an artwork-free build still has a centre mark.
+                val bm = art("hl_blackmesa")
+                if (bm != null) {
+                    bm.setTint(palette.accent)
+                    bm.setTintMode(PorterDuff.Mode.SRC_IN)
+                    drawDrawable(canvas, bm, cx + R * 0.10f, cy, R * 0.30f, 255)
+                } else {
+                    pEmblem.textSize = R * 0.28f
+                    canvas.drawText("λ", cx + R * 0.10f, cy + pEmblem.textSize * 0.38f, pEmblem)
+                }
             } else {
                 drawCombineEmblem(canvas, cx + R * 0.10f, cy, R * 0.115f)
             }
@@ -587,10 +596,10 @@ class LambdaWatchFaceService : WatchFaceService() {
             }
         }
 
-        private val hl2Art = HashMap<String, Drawable?>()
+        private val artCache = HashMap<String, Drawable?>()
 
-        /** Optional HL2 vector art, looked up by name so the build stays green. */
-        private fun hl2(name: String): Drawable? = hl2Art.getOrPut(name) {
+        /** Optional vector art, looked up by name so the build stays green. */
+        private fun art(name: String): Drawable? = artCache.getOrPut(name) {
             val id = ctx.resources.getIdentifier(name, "drawable", ctx.packageName)
             if (id != 0) ctx.getDrawable(id) else null
         }
@@ -600,7 +609,7 @@ class LambdaWatchFaceService : WatchFaceService() {
          * BitmapFactory cannot decode a VectorDrawable, hence getDrawable. Looked up
          * by name so the resource stays optional and the path fallback still applies.
          */
-        private fun combineDrawable(): Drawable? = hl2("hl2_combine")
+        private fun combineDrawable(): Drawable? = art("hl2_combine")
 
         /**
          * Combine counterpart to the gluon gun watermark: the insignia held faint
@@ -615,7 +624,7 @@ class LambdaWatchFaceService : WatchFaceService() {
 
             // The CMB glyph strip is wide and short (749x242), so it lies across the
             // dial the way the gluon gun does on the Lambda face.
-            val cmb = hl2("hl2_cmb")
+            val cmb = art("hl2_cmb")
             val bw  = R * 1.55f
             val bh  = bw * 242f / 749f
             val s   = R * 0.60f

@@ -12,8 +12,9 @@ local.properties
 
 # Imported game artwork — Valve's, not ours to redistribute.
 # Run setup_assets.py to regenerate these locally.
-app/src/main/res/drawable/hl_*.png
-app/src/main/res/drawable/hl2_*.xml
+# extension-agnostic on purpose: sprites arrive as .png, marks as .xml
+app/src/main/res/drawable/hl_*
+app/src/main/res/drawable/hl2_*
 
 # Source sheets and captures that contain game artwork
 *HUD.png
