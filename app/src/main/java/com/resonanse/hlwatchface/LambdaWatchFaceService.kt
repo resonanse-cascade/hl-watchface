@@ -119,17 +119,38 @@ class LambdaWatchFaceService : WatchFaceService() {
         )
 
         /**
-         * Interactive frame interval. 50 ms is 20 fps.
-         *
-         * Measured on-watch, a frame costs ~33 ms once the raster and vector art are
-         * cached (it was ~65 ms before). At 33 ms/30 fps the renderer is exactly at
-         * budget with no headroom and the CPU never idles while the screen is on; at
-         * 50 ms it has room to spare and the sweep still reads as smooth.
-         *
-         * Raise to 1000L for a one-frame-per-second face and a fraction of the
-         * battery draw — nothing breaks, the animations step instead of glide.
+         * Frame intervals offered in Customize. A frame costs ~33 ms on watch, so
+         * 30 fps would sit exactly at budget with the CPU never idling while the
+         * screen is on — hence 20 fps as the smooth option rather than 30.
          */
-        const val FRAME_MS = 50L
+        const val FPS_SMOOTH  = 50L    // 20 fps
+        const val FPS_BALANCED = 200L  // 5 fps, arc still ticks visibly
+        const val FPS_SAVER   = 1000L  // 1 fps, the original behaviour
+
+        val RATE_SETTING = ListUserStyleSetting(
+            UserStyleSetting.Id("framerate"),
+            "Motion",
+            "Smoothness against battery",
+            null,
+            listOf(
+                ListUserStyleSetting.ListOption(
+                    UserStyleSetting.Option.Id("smooth"), "Smooth", "Smooth", null
+                ),
+                ListUserStyleSetting.ListOption(
+                    UserStyleSetting.Option.Id("balanced"), "Balanced", "Balanced", null
+                ),
+                ListUserStyleSetting.ListOption(
+                    UserStyleSetting.Option.Id("saver"), "Battery saver", "Battery saver", null
+                )
+            ),
+            listOf(WatchFaceLayer.BASE)
+        )
+
+        fun frameMsFor(id: String?): Long = when (id) {
+            "balanced" -> FPS_BALANCED
+            "saver"    -> FPS_SAVER
+            else       -> FPS_SMOOTH
+        }
 
         const val THEME_LAMBDA  = "lambda"
         const val THEME_COMBINE = "combine"
@@ -159,7 +180,8 @@ class LambdaWatchFaceService : WatchFaceService() {
             if (themeId == THEME_COMBINE) COMBINE_PALETTE else LAMBDA_PALETTE
     }
 
-    override fun createUserStyleSchema() = UserStyleSchema(listOf(THEME_SETTING))
+    override fun createUserStyleSchema() =
+        UserStyleSchema(listOf(THEME_SETTING, RATE_SETTING))
 
     override fun createComplicationSlotsManager(
         repo: CurrentUserStyleRepository
@@ -242,7 +264,7 @@ class LambdaWatchFaceService : WatchFaceService() {
         private val ctx: Context,
         private val slotDrawables: List<ComplicationDrawable>
     ) : Renderer.CanvasRenderer2<HudRenderer.Assets>(
-        surfaceHolder, styleRepo, watchState, CanvasType.HARDWARE, FRAME_MS, true
+        surfaceHolder, styleRepo, watchState, CanvasType.HARDWARE, FPS_SMOOTH, true
     ) {
         private fun p(init: Paint.() -> Unit) = Paint(Paint.ANTI_ALIAS_FLAG).apply(init)
 
@@ -420,6 +442,12 @@ class LambdaWatchFaceService : WatchFaceService() {
             val ambient = renderParameters.drawMode == DrawMode.AMBIENT
             applyPalette(selectedPalette())
 
+            val rateOpt = styleRepo.userStyle.value[RATE_SETTING] as? ListUserStyleSetting.ListOption
+            val wantMs = frameMsFor(rateOpt?.id?.value?.let { String(it) })
+            if (interactiveDrawModeUpdateDelayMillis != wantMs) {
+                interactiveDrawModeUpdateDelayMillis = wantMs
+            }
+
             // Fractional seconds: without this every animation is quantised to whole
             // seconds and a higher frame rate buys nothing but battery drain.
             val secF = t.second + t.nano / 1_000_000_000f
@@ -556,7 +584,10 @@ class LambdaWatchFaceService : WatchFaceService() {
 
             // Sweep head runs from just off the left edge to just off the right edge.
             val band   = bw * 0.20f
-            val head   = dst.left - band + (second / 60f) * (bw + 2f * band)
+            // One pass every SWEEP_SECS rather than once a minute, which read as
+            // almost static.
+            val phase  = (second % SWEEP_SECS) / SWEEP_SECS
+            val head   = dst.left - band + phase * (bw + 2f * band)
             val slices = 9
             for (i in 0 until slices) {
                 val x0 = head - band + (2f * band) * i / slices
@@ -665,7 +696,8 @@ class LambdaWatchFaceService : WatchFaceService() {
             val half   = if (cmb != null) bw / 2f else s * 1.05f
             val tall   = if (cmb != null) bh / 2f else s * 1.3f
             val band   = half * 0.42f
-            val head   = cx - half - band + (second / 60f) * (2f * half + 2f * band)
+            val phase  = (second % SWEEP_SECS) / SWEEP_SECS
+            val head   = cx - half - band + phase * (2f * half + 2f * band)
             val slices = 9
             for (i in 0 until slices) {
                 val x0 = head - band + (2f * band) * i / slices
@@ -888,6 +920,9 @@ class LambdaWatchFaceService : WatchFaceService() {
         private var gridKey = ""
         private val rasterCache = HashMap<String, Bitmap>()
         private val pRaster = p { isFilterBitmap = true }
+
+        /** Seconds per watermark sweep. */
+        private val SWEEP_SECS = 6f
 
         /**
          * The raster is identical every frame for a given size and palette but costs

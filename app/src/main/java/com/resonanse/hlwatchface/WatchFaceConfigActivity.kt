@@ -41,6 +41,7 @@ class WatchFaceConfigActivity : ComponentActivity() {
     private val buttons = mutableMapOf<Int, Button>()
     private var pulseButton: Button? = null
     private var themeButton: Button? = null
+    private var rateButton: Button? = null
 
     /**
      * Heart rate is read from Health Services rather than the complication, because
@@ -94,11 +95,26 @@ class WatchFaceConfigActivity : ComponentActivity() {
             setTextColor(ORANGE)
             setBackgroundColor(Color.parseColor("#1A1A00"))
             setPadding(8, 8, 8, 8)
-            setOnClickListener { cycleTheme() }
+            setOnClickListener { cycleStyle("theme") }
         }
         themeButton = themeBtn
         root.addView(themeBtn, lp(marginBottom = 8))
-        refreshThemeLabel()
+
+        val rateBtn = Button(this).apply {
+            text     = "[ MOTION ]"
+            textSize = 12f
+            minHeight = 0
+            minimumHeight = 0
+            setLineSpacing(0f, 0.95f)
+            setTextColor(ORANGE)
+            setBackgroundColor(Color.parseColor("#1A1A00"))
+            setPadding(8, 8, 8, 8)
+            setOnClickListener { cycleStyle("framerate") }
+        }
+        rateButton = rateBtn
+        root.addView(rateBtn, lp(marginBottom = 8))
+
+        refreshStyleLabels()
 
         for ((label, id) in SLOTS) {
             val btn = Button(this).apply {
@@ -145,35 +161,34 @@ class WatchFaceConfigActivity : ComponentActivity() {
         })
     }
 
-    /** The theme setting, or null if the schema has not loaded yet. */
-    private fun themeSetting(): ListUserStyleSetting? =
+    /** A list-valued style setting by id, or null if the schema has not loaded. */
+    private fun listSetting(id: String): ListUserStyleSetting? =
         editorSession?.userStyleSchema?.userStyleSettings
             ?.filterIsInstance<ListUserStyleSetting>()
-            ?.firstOrNull { it.id.value == "theme" }
+            ?.firstOrNull { it.id.value == id }
 
-    private fun currentThemeOption(): ListUserStyleSetting.ListOption? {
-        val setting = themeSetting() ?: return null
+    private fun currentOption(id: String): ListUserStyleSetting.ListOption? {
+        val setting = listSetting(id) ?: return null
         return editorSession?.userStyle?.value?.get(setting) as? ListUserStyleSetting.ListOption
     }
 
-    private fun refreshThemeLabel() {
-        val name = currentThemeOption()?.displayName ?: "—"
-        themeButton?.text = "[ THEME ]\n$name"
+    private fun refreshStyleLabels() {
+        themeButton?.text = "[ THEME ]\n${currentOption("theme")?.displayName ?: "—"}"
+        rateButton?.text = "[ MOTION ]\n${currentOption("framerate")?.displayName ?: "—"}"
     }
 
-    /** Steps to the next option, so one button covers however many themes exist. */
-    private fun cycleTheme() {
+    /** Steps to the next option, so one button covers however many exist. */
+    private fun cycleStyle(id: String) {
         val session = editorSession ?: return
-        val setting = themeSetting() ?: return
+        val setting = listSetting(id) ?: return
         val options = setting.options.filterIsInstance<ListUserStyleSetting.ListOption>()
         if (options.isEmpty()) return
-        val currentId = currentThemeOption()?.id
-        val idx = options.indexOfFirst { it.id == currentId }
+        val idx = options.indexOfFirst { it.id == currentOption(id)?.id }
         val next = options[(idx + 1).mod(options.size)]
         session.userStyle.value = session.userStyle.value.toMutableUserStyle()
             .apply { set(setting, next) }
             .toUserStyle()
-        refreshThemeLabel()
+        refreshStyleLabels()
     }
 
     private fun lp(marginBottom: Int = 0) = LinearLayout.LayoutParams(
